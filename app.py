@@ -4,7 +4,7 @@ import tempfile
 import requests
 
 # --- Config ---
-TOGETHER_API_KEY = st.secrets.get("TOGETHER_API_KEY")  # Set this in .streamlit/secrets.toml
+TOGETHER_API_KEY = st.secrets.get("TOGETHER_API_KEY")
 MODEL = "mistralai/Mixtral-8x7B-Instruct-v0.1"
 
 # --- Functions ---
@@ -13,13 +13,14 @@ def transcribe_audio(uploaded_file):
         tmp.write(uploaded_file.read())
         tmp_path = tmp.name
 
-    model = WhisperModel("base", compute_type="float32")  # Alternatives: tiny, small, medium
+    model = WhisperModel("base", compute_type="float32")
     segments, _ = model.transcribe(tmp_path)
 
     transcript = ""
     for segment in segments:
         transcript += segment.text + " "
     return transcript.strip()
+
 
 def summarize_transcript(transcript):
     prompt = f"""
@@ -28,6 +29,7 @@ You are an AI assistant. Please summarize the following meeting transcript and e
 Transcript:
 {transcript[:5000]}
 """
+
     response = requests.post(
         "https://api.together.xyz/v1/chat/completions",
         headers={"Authorization": f"Bearer {TOGETHER_API_KEY}"},
@@ -36,13 +38,28 @@ Transcript:
             "messages": [{"role": "user", "content": prompt}]
         }
     )
-    output = response.json()["choices"][0]["message"]["content"]
-    if "Action Items:" in output:
-        summary, todos = output.split("Action Items:", 1)
-        todos = "Action Items:" + todos
-    else:
-        summary, todos = output, "❌ No action items identified."
-    return summary.strip(), todos.strip()
+
+    try:
+        result = response.json()
+        if "choices" not in result:
+            st.error("❌ API call failed. Check your Together.ai key or rate limits.")
+            st.text(result)  # Optional: debug the raw response
+            return "Summary unavailable.", "No action items extracted."
+        
+        output = result["choices"][0]["message"]["content"]
+        if "Action Items:" in output:
+            summary, todos = output.split("Action Items:", 1)
+            todos = "Action Items:" + todos
+        else:
+            summary, todos = output, "❌ No action items identified."
+
+        return summary.strip(), todos.strip()
+    
+    except Exception as e:
+        st.error("❌ An unexpected error occurred while summarizing.")
+        st.exception(e)
+        return "Summary failed.", "Action item extraction failed."
+
 
 def ask_question_about_meeting(question, transcript):
     prompt = f"""
@@ -52,15 +69,29 @@ Transcript: {transcript[:5000]}
 
 Question: {question}
 """
-    response = requests.post(
-        "https://api.together.xyz/v1/chat/completions",
-        headers={"Authorization": f"Bearer {TOGETHER_API_KEY}"},
-        json={
-            "model": MODEL,
-            "messages": [{"role": "user", "content": prompt}]
-        }
-    )
-    return response.json()["choices"][0]["message"]["content"]
+    try:
+        response = requests.post(
+            "https://api.together.xyz/v1/chat/completions",
+            headers={"Authorization": f"Bearer {TOGETHER_API_KEY}"},
+            json={
+                "model": MODEL,
+                "messages": [{"role": "user", "content": prompt}]
+            }
+        )
+
+        result = response.json()
+        if "choices" not in result:
+            st.error("❌ Q&A failed. API returned an error.")
+            st.text(result)
+            return "Unable to answer the question."
+
+        return result["choices"][0]["message"]["content"]
+
+    except Exception as e:
+        st.error("❌ An error occurred during Q&A.")
+        st.exception(e)
+        return "Error answering question."
+
 
 # --- Streamlit UI ---
 st.set_page_config(page_title="Meeting Whisperer", layout="centered")
