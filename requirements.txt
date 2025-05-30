@@ -1,0 +1,7 @@
+streamlit
+openai-whisper
+faster-whisper
+pydub
+tqdm
+requests
+
