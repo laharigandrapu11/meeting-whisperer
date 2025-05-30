@@ -1,20 +1,25 @@
 import streamlit as st
-import whisper
+from faster_whisper import WhisperModel
 import tempfile
 import requests
 
 # --- Config ---
-TOGETHER_API_KEY = st.secrets.get("TOGETHER_API_KEY")  # Set in .streamlit/secrets.toml
+TOGETHER_API_KEY = st.secrets.get("TOGETHER_API_KEY")  # Set this in .streamlit/secrets.toml
 MODEL = "mistralai/Mixtral-8x7B-Instruct-v0.1"
 
 # --- Functions ---
 def transcribe_audio(uploaded_file):
-    model = whisper.load_model("base")
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
         tmp.write(uploaded_file.read())
         tmp_path = tmp.name
-    result = model.transcribe(tmp_path)
-    return result["text"]
+
+    model = WhisperModel("base", compute_type="float32")  # Alternatives: tiny, small, medium
+    segments, _ = model.transcribe(tmp_path)
+
+    transcript = ""
+    for segment in segments:
+        transcript += segment.text + " "
+    return transcript.strip()
 
 def summarize_transcript(transcript):
     prompt = f"""
