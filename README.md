@@ -1,17 +1,17 @@
-# 📝 Meeting Whisperer
+# Meeting Whisperer
 
 An AI-powered Streamlit app that turns your meeting audio into actionable insights.
 
-## 🔧 Features
+## Features
 
-- 🎧 **Transcribes audio** using OpenAI Whisper  
-- 🧠 **Summarizes** with Claude (Anthropic)  
-- 📋 **Extracts task matrix** (who-should-do-what)  
-- ✅ **Auto-creates Jira tickets**  
-- 🧑‍⚖️ **Flags sensitive content** & commitments  
-- 💬 **Lets you ask questions** after the meeting
+- **Transcribes audio** using OpenAI Whisper  
+- **Summarizes** with Claude (Anthropic)  
+- **Extracts task matrix** (who-should-do-what)  
+- **Auto-creates Jira tickets**  
+- **Flags sensitive content** & commitments  
+- **Lets you ask questions** after the meeting
 
-## 🚀 Tech Stack
+## Tech Stack
 
 - Python  
 - Streamlit  
@@ -27,17 +27,17 @@ An AI-powered Streamlit app that turns your meeting audio into actionable insigh
    
 2. Add your Claude API key in app.py
 
-3. Run the app
+3. **Run the app**
 ```streamlit run app.py```
 
-4. Jira Integration
+4. **Jira Integration**
 
-Securely create Jira tickets from extracted tasks.
-
-You'll need:
-
-- Jira domain (e.g. yourteam.atlassian.net)
-
-- Project key (e.g. ENG)
-
-- Email & API token
+   Securely create Jira tickets from extracted tasks.
+   
+   You'll need:
+   
+   - Jira domain (e.g. yourteam.atlassian.net)
+   
+   - Project key (e.g. ENG)
+   
+   - Email & API token
